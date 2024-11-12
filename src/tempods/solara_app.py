@@ -51,7 +51,8 @@ def Page():
     print('Rendering Page')
 
     def _setup_glue() -> gj.JupyterApplication:
-        return gj.jglue()
+        gjapp = gj.jglue()
+        return gj.JupyterApplication(gjapp.data_collection, gjapp.session)
 
     glue_app = solara.use_memo(_setup_glue, [])
 
