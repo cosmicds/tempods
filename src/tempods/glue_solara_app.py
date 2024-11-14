@@ -1,55 +1,40 @@
-import solara
-import reacton.ipyvuetify as rv
-from cosmicds.utils import load_template
-from glue_jupyter.view import Viewer
-import ipyvuetify as v
-from ipyvuetify.VuetifyTemplate import VuetifyTemplate
-from ipywidgets import DOMWidget, widget_serialization
-from traitlets import Dict, Instance
-
-from os import getenv
 import json
-import glue_jupyter as gj
-from glue_map.data import RemoteGeoData_ArcGISImageServer, Data
-from glue_map.map.state import MapViewerState
-from glue_map.map.viewer import IPyLeafletMapViewer
-from glue_map.timeseries.viewer import TimeSeriesViewer
-from tempods.components.subset_control_widget import SubsetControlWidget
-
-from glue.config import colormaps
-from ipyleaflet import Map, Marker, LayersControl, TileLayer, WidgetControl, GeoJSON
-from datetime import date, datetime, timezone, timedelta
-from ipywidgets import SelectionSlider, Layout, Label, VBox, Dropdown, DatePicker, HTML, AppLayout, widgets, FloatSlider
-import pandas as pd
-import numpy as np
-
+from datetime import date, datetime, timedelta, timezone
+from os import getenv
 from pathlib import Path
 from typing import cast
 
+import glue_jupyter as gj
+import ipyvuetify as v
+import numpy as np
+import reacton.ipyvuetify as rv
+import solara
+from glue_map.data import Data, RemoteGeoData_ArcGISImageServer
+from glue_map.map.state import MapViewerState
+from glue_map.map.viewer import IPyLeafletMapViewer
+from glue_map.timeseries.viewer import TimeSeriesViewer
+
+try:
+    from glue_solara.app import GlueApp
+except ImportError:
+    GlueApp = None
+from ipyleaflet import GeoJSON, TileLayer, WidgetControl
+from ipywidgets import (DatePicker, FloatSlider, Layout, SelectionSlider,
+                        widgets)
+from tempods.components.subset_control_widget import SubsetControlWidget
 
 v.theme.dark = True
 
-@solara.component
-def ViewerToSolara(viewer, class_list = [], style = {}):
-    class_string = " ".join(["widget-layout"] + class_list)
-    style_string = ";".join([f"{k}: {v}" for k, v in style.items()])
-    with rv.Card(outlined=True, class_ = class_string, style_ = style_string):
-        with rv.CardText(children = [viewer.layout]):
-            pass
-    
 
-@solara.component
-def WidgetToSolara(widget, class_list = [], style = {}):
-    class_string = " ".join(["widget-layout"] + class_list)
-    style_string = ";".join([f"{k}: {v}" for k, v in style.items()])
-    with rv.Card(outlined=True, class_ = class_string, style_ = style_string):
-        with rv.CardText(children = [widget]):
-            pass
 
 @solara.component
 def Page():
     
     print('Rendering Page')
+    
+    if GlueApp is None:
+        solara.Error("glue_solara is not installed. Please install it to use this component.")
+        return
 
     def _setup_glue() -> gj.JupyterApplication:
         gjapp = gj.jglue()
@@ -74,7 +59,7 @@ def Page():
     med = (power_data['Install_MW'] > 10) & (power_data['Install_MW'] <= 100)
     small = (power_data['Install_MW'] <= 10)
     power_data.add_component(big*9 + med*4 + small*1, label='Size_binned')
-
+    
     coastlines_path = Path(__file__).parent.parent.parent / "notebooks" / "coastlines.geojson"
     with open(str(coastlines_path), 'r') as f:
         coastdata = json.load(f)
@@ -97,7 +82,7 @@ def Page():
         stadia_labels_url += f"?api_key={stadia_api_key}"
     map_state = MapViewerState(basemap=TileLayer(url=stadia_base_url))
     map_viewer = cast(IPyLeafletMapViewer, glue_app.new_data_viewer("map", data=tempo_data, state=map_state, show=False))
-    map_viewer.figure_widget.layout = {"width": "100%", "height": "500px"}
+    map_viewer.figure_widget.layout = {"width": "900px", "height": "500px"}
     map_viewer.map.panes = {"labels": {"zIndex": 650}}
 
     _ = map_viewer.map.add(TileLayer(url=stadia_labels_url, pane='labels'))
@@ -171,6 +156,7 @@ def Page():
     map_viewer.map.add(opacity_label)
     map_viewer.map.add(opacity_control)
     map_viewer.map.add(WidgetControl(widget=date_chooser, position='bottomleft'))
+    map_viewer.map.add(powerplant_widget)
 
     def update_slider_value(event):
         if 'domain' in event and 'x' in event['domain']:
@@ -184,15 +170,6 @@ def Page():
 
     timeseries_viewer.add_event_callback(callback = update_slider_value, events=['click'])
 
-    # App layout
-            
-    with solara.AppBar():
-        solara.AppBarTitle("TEMPO Data Story Prototype")
-    with solara.VBox():        
-        with rv.Row():
-            with solara.Columns(widths=[8, 3]):
-                ViewerToSolara(map_viewer, class_list = ["mx-2"], style = {"outline": "1px solid white"})
-                WidgetToSolara(powerplant_widget, class_list = ["mx-2"], style = {"outline": "1px solid white"})
-        with rv.Col():
-            ViewerToSolara(timeseries_viewer, class_list = ["mx-2"], style = {"outline": "1px solid white"})
+    # Use glue_solara for layout
+    GlueApp(glue_app)
 
