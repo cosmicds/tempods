@@ -42,23 +42,18 @@ def SubsetControlWidget(viewer: Viewer, data: Data,
         for t, s in _indices():
             viewer.layers[_layer_index(t, s)].state.visible = (t in type_indices) and (s in size_indices)
 
-    def _updated_list_on_selection_changed(index: int, value: bool, selections: list[int]) -> list[int]:
-        if value and index not in selections:
-            lst = selections + [index]
-        elif not value:
-            lst = [t for t in type_selections if t != index]
-        else:
-            lst = selections
-        return sorted(lst)
-
     def _on_type_selection_changed(index: int, value: bool):
-        nonlocal type_selections
-        type_selections = _updated_list_on_selection_changed(index, value, type_selections)
+        if value and index not in type_selections:
+            type_selections.append(index)
+        elif not value:
+            type_selections[:] = [t for t in type_selections if t != value]
         _update_visibilities(type_selections, size_selections)
 
     def _on_size_selection_changed(index: int, value: bool):
-        nonlocal size_selections
-        size_selections = _updated_list_on_selection_changed(index, value, size_selections)
+        if value and index not in size_selections:
+            size_selections.append(index)
+        elif not value:
+            size_selections[:] = [s for s in size_selections if s != value]
         _update_visibilities(type_selections, size_selections)
 
     for (type_idx, size_idx) in _indices():

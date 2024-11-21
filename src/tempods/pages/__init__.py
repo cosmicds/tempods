@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 import json
 from os import getenv
 from pathlib import Path
@@ -88,6 +89,12 @@ def Page():
     gjapp, map_viewer, timeseries_viewer = solara.use_memo(_glue_setup, dependencies=[])
     powerplant_data = gjapp.data_collection["Power_Plants"]
     tempo_data = gjapp.data_collection["TEMPO"]
+
+    def convert_from_milliseconds(milliseconds_since_epoch):
+        """Converts milliseconds since epoch to a date-time string in 'YYYY-MM-DDTHH:MM:SSZ' format."""
+        dt = datetime.fromtimestamp((milliseconds_since_epoch)/ 1000, tz=timezone(offset=timedelta(hours=0), name="UTC"))
+        date_time_str = dt.strftime('%H:%M')
+        return date_time_str
 
 
     # Layout
