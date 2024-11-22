@@ -97,7 +97,7 @@ def Page():
         date_time_str = dt.strftime('%H:%M')
         return date_time_str
 
-    time_values = tempo_data.get_time_steps(timeseries_viewer.state.t_date)
+    time_values = list(tempo_data.get_time_steps(timeseries_viewer.state.t_date))
     time_strings = [convert_from_milliseconds(t) for t in time_values]  
 
     def update_image(timestep):
@@ -114,8 +114,7 @@ def Page():
         # timeseries_viewer.state.t_date = change.new.isoformat()
 
     def update_opacity(opacity):
-        map_viewer.layers[0].state.alpha = opacity
-
+        map_viewer.layers[0].state.opacity = opacity
 
     # Layout
 
@@ -126,21 +125,24 @@ def Page():
         with solara.Row():
             with solara.Columns(widths=[8, 3]):
                 ViewerLayout(map_viewer)
-                solara.SliderValue(values=time_values,
-                                   value=time_values[0],
-                                   on_value=update_image,
-                                   label="Time (UTC)")
-                rv.DatePicker(v_model=date(2024, 10, 15))
-                solara.SliderFloat(label="Opacity",
-                                   value=1,
-                                   on_value=update_opacity,
-                                   min=0,
-                                   max=1,
-                                   step=0.05)
+                # solara.SliderValue(values=time_values,
+                #                    value=time_values[0],
+                #                    on_value=update_image,
+                #                    label="Time (UTC)")
+                # rv.DatePicker(v_model=date(2024, 10, 15))
+   
                 SubsetControlWidget(viewer=map_viewer,
                                     data=powerplant_data,
                                     type_att=powerplant_data.id["PrimSource"],
                                     size_att=powerplant_data.id["Size_binned"])
+
+        with solara.Row():
+             solara.SliderFloat(label="Opacity",
+                                value=1,
+                                on_value=update_opacity,
+                                min=0,
+                                max=1,
+                                step=0.05)
 
         with solara.Column():
             ViewerLayout(timeseries_viewer)
