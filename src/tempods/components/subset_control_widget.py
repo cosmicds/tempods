@@ -38,7 +38,6 @@ def SubsetControlWidget(viewer: Viewer, data: Data,
         return layer_indices[(type_index, size_index)]
 
     def _update_visibilities(type_indices: list[int], size_indices: list[int]):
-        print(type_indices, size_indices)
         for t, s in _indices():
             viewer.layers[_layer_index(t, s)].state.visible = (t in type_indices) and (s in size_indices)
 
@@ -46,14 +45,14 @@ def SubsetControlWidget(viewer: Viewer, data: Data,
         if value and index not in type_selections:
             type_selections.append(index)
         elif not value:
-            type_selections[:] = [t for t in type_selections if t != value]
+            type_selections[:] = [t for t in type_selections if t != index]
         _update_visibilities(type_selections, size_selections)
 
     def _on_size_selection_changed(index: int, value: bool):
         if value and index not in size_selections:
             size_selections.append(index)
         elif not value:
-            size_selections[:] = [s for s in size_selections if s != value]
+            size_selections[:] = [s for s in size_selections if s != index]
         _update_visibilities(type_selections, size_selections)
 
     for (type_idx, size_idx) in _indices():
