@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 import json
 from os import getenv
 from pathlib import Path
@@ -12,6 +12,7 @@ from glue_map.map.state import MapViewerState
 from glue_map.map.layer_artist import RemoteGeoData_ArcGISImageServer
 from glue_map.timeseries import TimeSeriesViewer
 from ipyleaflet import TileLayer, GeoJSON
+import numpy as np
 import solara
 from solara.alias import rv
 
@@ -96,6 +97,25 @@ def Page():
         date_time_str = dt.strftime('%H:%M')
         return date_time_str
 
+    time_values = tempo_data.get_time_steps(timeseries_viewer.state.t_date)
+    time_strings = [convert_from_milliseconds(t) for t in time_values]  
+
+    def update_image(timestep):
+        map_viewer.layers[0].state.timestep = timestep 
+        dt = datetime.fromtimestamp((timestep)/ 1000, tz=timezone(offset=timedelta(hours=0), name="UTC"))
+        timeseries_viewer.timemark.x = np.array([dt, dt]).astype('datetime64[ms]')
+
+    def update_date(date):
+        pass
+        # time_values = tempo_data.get_time_steps(date.isoformat())
+        # time_strings = [convert_from_milliseconds(t) for t in time_values]  
+        # time_options = [(time_strings[i], time_values[i]) for i in range(len(time_values))]
+        # slider.options = time_options
+        # timeseries_viewer.state.t_date = change.new.isoformat()
+
+    def update_opacity(opacity):
+        map_viewer.layers[0].state.alpha = opacity
+
 
     # Layout
 
@@ -106,6 +126,17 @@ def Page():
         with solara.Row():
             with solara.Columns(widths=[8, 3]):
                 ViewerLayout(map_viewer)
+                solara.SliderValue(values=time_values,
+                                   value=time_values[0],
+                                   on_value=update_image,
+                                   label="Time (UTC)")
+                rv.DatePicker(v_model=date(2024, 10, 15))
+                solara.SliderFloat(label="Opacity",
+                                   value=1,
+                                   on_value=update_opacity,
+                                   min=0,
+                                   max=1,
+                                   step=0.05)
                 SubsetControlWidget(viewer=map_viewer,
                                     data=powerplant_data,
                                     type_att=powerplant_data.id["PrimSource"],
