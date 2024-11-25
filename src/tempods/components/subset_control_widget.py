@@ -4,7 +4,7 @@ from cosmicds.components.percentage_selector import SubsetState
 from glue.core import ComponentID, Data
 from glue.core.subset import AndState, CategorySubsetState, RangeSubsetState
 from glue.viewers.common.viewer import Viewer
-from numpy import unique
+from numpy import size, unique
 import solara
 from solara.alias import rv
 
@@ -41,19 +41,15 @@ def SubsetControlWidget(viewer: Viewer, data: Data,
         for t, s in _indices():
             viewer.layers[_layer_index(t, s)].state.visible = (t in type_indices) and (s in size_indices)
 
-    def _on_type_selection_changed(index: int, value: bool):
-        if value and index not in type_selections:
-            type_selections.append(index)
-        elif not value:
-            type_selections[:] = [t for t in type_selections if t != index]
-        _update_visibilities(type_selections, size_selections)
+    def _type_selections_changed(selections: list[int]):
+        nonlocal type_selections
+        type_selections = selections
+        _update_visibilities(selections, size_selections)
 
-    def _on_size_selection_changed(index: int, value: bool):
-        if value and index not in size_selections:
-            size_selections.append(index)
-        elif not value:
-            size_selections[:] = [s for s in size_selections if s != index]
-        _update_visibilities(type_selections, size_selections)
+    def _size_selections_changed(selections: list[int]):
+        nonlocal size_selections
+        size_selections = selections
+        _update_visibilities(type_selections, selections)
 
     for (type_idx, size_idx) in _indices():
        subset = data.new_subset(color=type_colors[type_idx], alpha=1)
@@ -74,45 +70,20 @@ def SubsetControlWidget(viewer: Viewer, data: Data,
 
         with rv.List():
             rv.Text(children=["Plant Type"])
-            with rv.ListItemGroup(v_model=type_selections, multiple=True):
+            with rv.ListItemGroup(v_model=type_selections, on_v_model=_type_selections_changed, multiple=True):
                 for index, option in enumerate(type_options):
                     rv.ListItem(
-                        v_slots=[
-                            {
-                                "name": "default",
-                                "variable": "active",
-                                "children": [
-                                    rv.ListItemContent(class_="font-weight-bold",
-                                                       children=[option.title()]),
-                                    rv.ListItemAction(children=[
-                                        rv.Checkbox(v_model=index in type_selections,
-                                                    on_v_model=lambda value, index=index: _on_type_selection_changed(index, value),
-                                                    color=type_colors[index])
-                                    ])
-                                ]
-                            }
-                        ]
+                        value=index,
+                        color=type_colors[index],
+                        children=[rv.ListItemTitle(children=[option.title()])]
                     )
-
 
         with rv.List():
             rv.Text(children=["Title"])
-            with rv.ListItemGroup(v_model=size_selections, multiple=True):
+            with rv.ListItemGroup(v_model=size_selections, on_v_model=_size_selections_changed, multiple=True):
                 for index, option in enumerate(size_options):
                     rv.ListItem(
-                        v_slots=[
-                            {
-                                "name": "default",
-                                "variable": "active",
-                                "children": [
-                                    rv.ListItemContent(class_="font-weight-bold",
-                                                       children=[option.title()]),
-                                    rv.ListItemAction(children=[
-                                        rv.Checkbox(v_model=index in type_selections,
-                                                    on_v_model=lambda value, index=index: _on_size_selection_changed(index, value),
-                                                    color="gray")
-                                    ])
-                                ]
-                            }
-                        ]
+                        value=index,
+                        color="gray",
+                        children=[rv.ListItemTitle(children=[option.title()])]
                     )
