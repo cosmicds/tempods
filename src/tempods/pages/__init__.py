@@ -97,21 +97,26 @@ def Page():
         date_time_str = dt.strftime('%H:%M')
         return date_time_str
 
-    time_values = list(tempo_data.get_time_steps(timeseries_viewer.state.t_date))
-    time_strings = [convert_from_milliseconds(t) for t in time_values]  
+    time_index, set_time_index = solara.use_state(0)
+    current_date, set_current_date = solara.use_state("2024-10-15")
+    time_values, set_time_values = solara.use_state(tempo_data.get_time_steps(current_date))
 
-    def update_image(timestep):
-        map_viewer.layers[0].state.timestep = timestep 
+    def update_image(index):
+        print(f"update_image: {index}")
+        set_time_index(index)
+        timestep = time_values[index]
         dt = datetime.fromtimestamp((timestep)/ 1000, tz=timezone(offset=timedelta(hours=0), name="UTC"))
+        print(np.array([dt, dt]).astype('datetime64[ms]'))
+        print(map_viewer.layers[0].state.timestep, timestep)
+        map_viewer.layers[0].state.timestep = timestep 
         timeseries_viewer.timemark.x = np.array([dt, dt]).astype('datetime64[ms]')
 
     def update_date(date):
-        pass
-        # time_values = tempo_data.get_time_steps(date.isoformat())
-        # time_strings = [convert_from_milliseconds(t) for t in time_values]  
-        # time_options = [(time_strings[i], time_values[i]) for i in range(len(time_values))]
-        # slider.options = time_options
-        # timeseries_viewer.state.t_date = change.new.isoformat()
+        print("update_date")
+        set_current_date(date)
+        set_time_values(tempo_data.get_time_steps(date))
+        picker_text_field.value_property = date
+        timeseries_viewer.state.t_date = date
 
     def update_opacity(opacity):
         map_viewer.layers[0].state.opacity = opacity
@@ -121,21 +126,44 @@ def Page():
     with solara.AppBar():
         solara.AppBarTitle("TEMPO Data Story")
 
+    picker_text_field = rv.TextField(v_on="x.on", v_model=current_date, readonly=True)
     with solara.VBox():
         with solara.Row():
             with solara.Columns(widths=[8, 3]):
                 ViewerLayout(map_viewer)
-                # solara.SliderValue(values=time_values,
-                #                    value=time_values[0],
-                #                    on_value=update_image,
-                #                    label="Time (UTC)")
-                # rv.DatePicker(v_model=date(2024, 10, 15))
-   
                 SubsetControlWidget(viewer=map_viewer,
                                     data=powerplant_data,
                                     type_att=powerplant_data.id["PrimSource"],
                                     size_att=powerplant_data.id["Size_binned"])
 
+        with solara.Row():
+            rv.Menu(
+                children=[
+                    rv.DatePicker(v_model=current_date,
+                                  on_v_model=update_date)
+                ],
+                v_slots=[
+                    {
+                        "name": "activator",
+                        "variable": "x",
+                        "children": [
+                            picker_text_field,
+                        ]
+                    }
+                ]
+            )
+
+        with solara.Row():
+            rv.Slider(
+                v_model=time_index,
+                on_v_model=update_image,
+                label="Time (UTC)",
+                tick_labels=[],
+                hide_details=True,
+                dense=False,
+                min=0,
+                max=len(time_values) - 1,
+            )
         with solara.Row():
              solara.SliderFloat(label="Opacity",
                                 value=1,
