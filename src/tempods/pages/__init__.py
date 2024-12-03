@@ -68,6 +68,8 @@ def Page():
         powerplant_data.add_component(big*9 + med*4 + small*1, label='Size_binned')
 
         map = cast(IPyLeafletMapViewer, app.new_data_viewer(IPyLeafletMapViewer, data=tempo_data, state=map_state, show=False))
+        map.figure_widget.layout = {"width": "100%", "height": "500px"}
+        map.map.panes = {"labels": {"zIndex": 650}}
         map.map.add(TileLayer(url=stadia_labels_url, pane='labels'))
         map.map.add(geo_json)
 
