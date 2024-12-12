@@ -60,7 +60,7 @@ def Page():
         # Our remote dataset does not have real components representing latitude and longitude. We link to the only components
         # it does have so that we can display this on the same viewer without trigger and IncompatibleAttribute error
         app.add_link(app.data_collection["Power_Plants"], 'Longitude',  app.data_collection["TEMPO"], 'Pixel Axis 0')
-        app.add_link(app.data_collection["Power_Plants"], 'Latitude', app.data_collection["TEMPO"], 'TEMPO_NO2_L3_V03_HOURLY_TROPOSPHERIC_VERTICAL_COLUMN_BETA')
+        app.add_link(app.data_collection["Power_Plants"], 'Latitude', app.data_collection["TEMPO"], 'TEMPO_NO2_L3_V03_HOURLY_TROPOSPHERIC_VERTICAL_COLUMN')
 
         big = (powerplant_data['Install_MW'] > 100)
         med = (powerplant_data['Install_MW'] > 10) & (powerplant_data['Install_MW'] <= 100)
@@ -106,7 +106,7 @@ def Page():
     def update_image(index):
         print(f"update_image: {index}")
         set_time_index(index)
-        timestep = time_values[index]
+        timestep = time_values[index].item()
         dt = datetime.fromtimestamp((timestep)/ 1000, tz=timezone(offset=timedelta(hours=0), name="UTC"))
         print(np.array([dt, dt]).astype('datetime64[ms]'))
         print(map_viewer.layers[0].state.timestep, timestep)
