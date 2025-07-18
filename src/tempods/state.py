@@ -15,6 +15,8 @@ logger = setup_logger("TEMPO STATE")
 class LocalState(BaseLocalState):
     title: str = "Tempo"
     story_id: str = "tempo"
+    last_route: Optional[str] = None
+    route_restored: bool = Field(False, exclude=True)
 
 
 LOCAL_STATE = solara.reactive(LocalState())

@@ -1,49 +1,49 @@
-from cosmicds.layout import BaseLayout
-from .state import GLOBAL_STATE, LOCAL_STATE
 import solara
-from solara.toestand import Ref
-from cosmicds.components import MathJaxSupport, PlotlySupport
-from .remote import LOCAL_API
-from cosmicds.logger import setup_logger
 
-logger = setup_logger("LAYOUT")
+
+
+# Will work with current cosmicds layout
+# from cosmicds.layout import BaseLayout
+# @solara.component
+# def Layout(children=[]):
+#     # Note that children being passed here for this example will be a Page() element.
+#     route_current, routes_all = solara.use_route()
+#     return BaseLayout(None, children=children, story_name="TEMPO")
+
+
+# Solara docs example layout
+# @solara.component
+# def Layout(children=[]):
+    # Note that children being passed here for this example will be a Page() element.
+    # route_current, routes_all = solara.use_route()
+    # with solara.Column():
+        # put all buttons in a single row
+        # with solara.Row():
+        #     for route in routes_all:
+        #         with solara.Link(route):
+        #             solara.Button(route.path, color="red" if route_current == route else None)
+        # under the navigation buttons, we add our children (the single Page())
+        # solara.Column(children=children)
+    
+    
+
+
+# the no-layout layout
+# @solara.component
+# def Layout(children=[]):
+#     # there will only be 1 child, which is the Page()
+#     return children[0]
 
 
 @solara.component
-def Layout(children=[]):
+def Layout(children):
+    route, routes = solara.use_route()
+    dark_effective = solara.lab.use_dark_effective()
+    with solara.AppLayout(toolbar_dark=dark_effective, color=None):
+        with solara.AppBar():
+            solara.AppBarTitle("TEMPO Data Viewer")
+            solara.lab.ThemeToggle()
+        with solara.Column():
+            # Add the main content area
+            solara.Column(children=children)
 
-    MathJaxSupport()
-    PlotlySupport()
-    logger.info("Mounted external libraries.")
-
-    student_id = Ref(GLOBAL_STATE.fields.student.id)
-    loaded_states = solara.use_reactive(False)
-
-    async def _load_global_local_states():
-        logger.info(
-            "Here is where we would load story stage and measurements for the user.",
-        )
-
-    solara.lab.use_task(_load_global_local_states, dependencies=[student_id.value])
-
-    # solara.use_memo(_load_local_state, dependencies=[student_id.value])
-
-    async def _write_local_global_states():
-        if not loaded_states.value:
-            return
-
-        logger.info(
-            "Here is where we would write the local and global states to the database."
-        )
-
-    solara.lab.use_task(
-        _write_local_global_states, dependencies=[GLOBAL_STATE.value, LOCAL_STATE.value]
-    )
-
-    with BaseLayout(
-        local_state=LOCAL_STATE,
-        children=children,
-        story_name=LOCAL_STATE.value.story_id,
-        story_title=LOCAL_STATE.value.title,
-    ):
-        pass
