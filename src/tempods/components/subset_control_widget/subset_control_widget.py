@@ -5,9 +5,9 @@ import ipyvuetify as v
 from itertools import product
 from numpy import unique
 from traitlets import List, observe
-
+import asyncio
 from cosmicds.utils import load_template
-
+import sys
 
 class SubsetControlWidget(v.VuetifyTemplate):
     template = load_template("subset_control_widget.vue", __file__, traitlet=True).tag(sync=True)
@@ -42,6 +42,7 @@ class SubsetControlWidget(v.VuetifyTemplate):
         self.type_selections = []
         self.size_selections = []
         self._update_visibilities(self.type_selections, self.size_selections)
+
 
         self.observe(self._on_type_selections_changed, names=["type_selections"])
         self.observe(self._on_size_selections_changed, names=["size_selections"])

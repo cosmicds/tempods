@@ -44,7 +44,7 @@ class TempoApp(v.VuetifyTemplate):
         # Our remote dataset does not have real components representing latitude and longitude. We link to the only components
         # it does have so that we can display this on the same viewer without trigger and IncompatibleAttribute error
         self.glue_app.add_link(self.glue_app.data_collection["Power_Plants"], 'Longitude',  self.glue_app.data_collection["TEMPO"], 'Pixel Axis 0')
-        self.glue_app.add_link(self.glue_app.data_collection["Power_Plants"], 'Latitude', self.glue_app.data_collection["TEMPO"], 'TEMPO_NO2_L3_V03_HOURLY_TROPOSPHERIC_VERTICAL_COLUMN_BETA')
+        self.glue_app.add_link(self.glue_app.data_collection["Power_Plants"], 'Latitude', self.glue_app.data_collection["TEMPO"], 'TEMPO_NO2_L3_V03_HOURLY_TROPOSPHERIC_VERTICAL_COLUMN')
 
         big = (power_data['Install_MW'] > 100)
         med = (power_data['Install_MW'] > 10) & (power_data['Install_MW'] <= 100)

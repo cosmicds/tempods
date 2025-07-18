@@ -75,14 +75,13 @@ body {
   width: 200px;
 }
 
-#map-viewer {
-  /* width: 66%; */
+#map-viewer, #timeseries-viewer {
+  width: 66%;
 }
 
 #map-viewer, #powerplant-widget, #timeseries-viewer {
   margin: 0.5em;
   padding: 0.5em;
-  width: fit-content;
 }
 
 #timeseries-viewer {
